@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# Required tools to run this lab
+required_tools="docker-compose yq wget rsync grep sed patch"
+
+# Keycloack Docker image
+kc_image=registry.access.redhat.com/redhat-sso-7/sso73-openshift
+
+# Started Wildfy configuration used when started
+wildfly_config=standalone-openshift.xml
+
+# If a initial set of configuration files will be made
+# set its number here, or 0 if not
+initial_configs=0
+
+# https://jdbc.postgresql.org/download.html
+postgresql_version="42.2.14"
+postgresql_jar=https://jdbc.postgresql.org/download/postgresql-$postgresql_version.jar

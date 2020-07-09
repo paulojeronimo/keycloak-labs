@@ -1,0 +1,29 @@
+--- configs/0/configuration/standalone-openshift.xml	2020-07-09 10:41:39.000000000 -0300
++++ configs/1/configuration/standalone-openshift.xml	2020-07-09 09:53:00.000000000 -0300
+@@ -117,7 +117,25 @@
+         <subsystem xmlns="urn:jboss:domain:core-management:1.0"/>
+         <subsystem xmlns="urn:jboss:domain:datasources:5.0">
+             <datasources>
+-                <datasource jta="true" jndi-name="java:jboss/datasources/KeycloakDS" pool-name="KeycloakDS" enabled="true" use-java-context="true" statistics-enabled="${wildfly.datasources.statistics-enabled:${wildfly.statistics-enabled:false}}"> <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url> <driver>h2</driver> <security> <user-name>sa</user-name> <password>sa</password> </security> </datasource><!-- ##DATASOURCES## -->
++                <!-- <datasource jta="true" jndi-name="java:jboss/datasources/KeycloakDS" pool-name="KeycloakDS" enabled="true" use-java-context="true" statistics-enabled="${wildfly.datasources.statistics-enabled:${wildfly.statistics-enabled:false}}"> <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url> <driver>h2</driver> <security> <user-name>sa</user-name> <password>sa</password> </security> </datasource>##DATASOURCES## -->
++                <xa-datasource jndi-name="java:jboss/datasources/KeycloakDS" pool-name="KeycloakDS" enabled="true" use-java-context="true" use-ccm="true">
++                    <driver>postgresql</driver>
++                    <xa-datasource-property name="ServerName">${env.DB_ADDR:pg}</xa-datasource-property>
++                    <xa-datasource-property name="PortNumber">${env.DB_PORT:5432}</xa-datasource-property>
++                    <xa-datasource-property name="DatabaseName">${env.DB_DATABASE:kcdb}</xa-datasource-property>
++                    <xa-pool>
++                        <flush-strategy>IdleConnections</flush-strategy>
++                    </xa-pool>
++                    <security>
++                        <user-name>${env.DB_USER:kcuser}</user-name>
++                        <password>${env.DB_PASSWORD:kcpassword}</password>
++                    </security>
++                    <validation>
++                        <check-valid-connection-sql>SELECT 1</check-valid-connection-sql>
++                        <background-validation>true</background-validation>
++                        <background-validation-millis>60000</background-validation-millis>
++                    </validation>
++                </xa-datasource>
+                 <datasource jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS" enabled="true" use-java-context="true">
+                     <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url>
+                     <driver>h2</driver>

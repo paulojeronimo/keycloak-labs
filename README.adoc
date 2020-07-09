@@ -1,0 +1,71 @@
+= Keycloak labs
+{localdatetime}
+:experimental:
+
+A set of labs to test https://www.keycloak.org/[Keycloak^] configurations and functionalities.
+
+Actually, until this moment, these labs were tested only in https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/[RH-SSO 7.3^].
+
+To follow the instructions here, you will need a Linux or macOS shell in your hands.
+Also, you will need some tools installed (read link:config.sample[] to know about).
+
+All `lab-*` functions used in these labs are written in Bash.
+They are available in one unique file: link:functions.sh[].
+
+== Lab 0 - Start Keycloak without any modified configuration
+
+----
+$ source ./functions.sh
+$ lab-up
+----
+
+Then, open http://localhost:8080.
+Open http://localhost:8080/auth/admin/[Administration Console].
+Log in with the user and password
+configured inside link:docker-compose.template.yml[].
+
+To stop the server, type kbd:[Ctrl+C] in the running console.
+
+== Lab 1 - Start Keycloak using PostgreSQL to manage its database
+
+----
+$ sed 's/\(initial_configs=\)0/\11/g' config.sample > config
+$ lab-restart
+$ lab-up -d
+----
+
+----
+$ lab-pg-bash
+root@388ddadd36d4:/# psql -U kcuser kcdb
+psql (12.3 (Debian 12.3-1.pgdg100+1))
+Type "help" for help.
+
+kcdb=# \l
+                              List of databases
+   Name    | Owner  | Encoding |  Collate   |   Ctype    | Access privileges
+-----------+--------+----------+------------+------------+-------------------
+ kcdb      | kcuser | UTF8     | en_US.utf8 | en_US.utf8 |
+ postgres  | kcuser | UTF8     | en_US.utf8 | en_US.utf8 |
+ template0 | kcuser | UTF8     | en_US.utf8 | en_US.utf8 | =c/kcuser        +
+           |        |          |            |            | kcuser=CTc/kcuser
+ template1 | kcuser | UTF8     | en_US.utf8 | en_US.utf8 | =c/kcuser        +
+           |        |          |            |            | kcuser=CTc/kcuser
+(4 rows)
+
+kcdb=# \d+
+                                 List of relations
+ Schema |             Name              | Type  | Owner  |    Size    | Description
+--------+-------------------------------+-------+--------+------------+-------------
+ public | admin_event_entity            | table | kcuser | 8192 bytes |
+ public | associated_policy             | table | kcuser | 0 bytes    |
+ public | authentication_execution      | table | kcuser | 8192 bytes |
+ public | authentication_flow           | table | kcuser | 16 kB      |
+ public | authenticator_config          | table | kcuser | 16 kB      |
+ public | authenticator_config_entry    | table | kcuser | 16 kB      |
+ public | broker_link                   | table | kcuser | 8192 bytes |
+ public | client                        | table | kcuser | 16 kB      |
+...
+...
+----
+
+Type kbd:[Ctrl+D] two (2) times to return to your shell.

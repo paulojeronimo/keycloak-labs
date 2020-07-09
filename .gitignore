@@ -1,0 +1,6 @@
+/config
+/README.html
+/tmp
+*.jar
+/docker-compose.yml
+/container
