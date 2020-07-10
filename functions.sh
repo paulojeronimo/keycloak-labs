@@ -50,7 +50,7 @@ lab-setup() {(
   }
   [ -d container ] || {
     lab-kc-config-pg-driver
-    [ $initial_configs != 0 ] && lab-setup-configs 1 || {
+    [ $initial_configs != 0 ] && lab-setup-configs $initial_configs || {
       echo "Skipping the setup of initial configuration files ..."
     }
   }
@@ -72,13 +72,18 @@ lab-setup-configs() {(
   local f_diff
   local f_orig
   for f in $(find configs/$dir -type f); do
+    f_orig=container/${f#configs/*/}
     if [ "${f##*.}" = "diff" ]; then
       f_diff=$f
-      f_orig=container/${f#configs/?/}
       f_orig=${f_orig%.diff}
       [ -f $f_orig ] && patch $f_orig < $f_diff
-      # NOTE: the patch file ($f_diff) generation is made with this command (for example):
-      # f=configuration/standalone-openshift.xml; diff --strip-trailing-cr -uNr configs/{0,1}/$f > configs/1/$f.diff
+      # NOTE: standalone-openshift.xml.diff (for example) can be made in this way:
+      # $ cd container/; f=configuration/standalone-openshift.xml
+      # $ cp ../configs/0/$f ./$f.original
+      # $ diff --strip-trailing-cr -uNr $f.original $f > ${f#configuration/}.diff
+    else
+      mkdir -p `dirname $f_orig`
+      cp $f $f_orig
     fi
   done
 )}
