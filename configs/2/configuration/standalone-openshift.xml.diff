@@ -1,0 +1,46 @@
+--- configs/0/configuration/standalone-openshift.xml	2020-07-09 14:17:40.000000000 -0300
++++ container/configuration/standalone-openshift.xml	2020-09-25 06:35:37.000000000 -0300
+@@ -117,7 +117,23 @@
+         <subsystem xmlns="urn:jboss:domain:core-management:1.0"/>
+         <subsystem xmlns="urn:jboss:domain:datasources:5.0">
+             <datasources>
+-                <datasource jta="true" jndi-name="java:jboss/datasources/KeycloakDS" pool-name="KeycloakDS" enabled="true" use-java-context="true" statistics-enabled="${wildfly.datasources.statistics-enabled:${wildfly.statistics-enabled:false}}"> <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url> <driver>h2</driver> <security> <user-name>sa</user-name> <password>sa</password> </security> </datasource><!-- ##DATASOURCES## -->
++                <!-- <datasource jta="true" jndi-name="java:jboss/datasources/KeycloakDS" pool-name="KeycloakDS" enabled="true" use-java-context="true" statistics-enabled="${wildfly.datasources.statistics-enabled:${wildfly.statistics-enabled:false}}"> <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url> <driver>h2</driver> <security> <user-name>sa</user-name> <password>sa</password> </security> </datasource>##DATASOURCES## -->
++                <datasource jndi-name="java:jboss/datasources/KeycloakDS" pool-name="KeycloakDS" enabled="true" use-java-context="true" use-ccm="true">
++                    <connection-url>jdbc:sqlserver://${env.DB_ADDR:}:${env.DB_PORT:};database=${env.DB_DATABASE:}${env.JDBC_PARAMS:}</connection-url>
++                    <driver>sqlserver</driver>
++                    <pool>
++                        <flush-strategy>IdleConnections</flush-strategy>
++                    </pool>
++                    <security>
++                        <user-name>${env.DB_USER:}</user-name>
++                        <password>${env.DB_PASSWORD:}</password>
++                    </security>
++                    <validation>
++                        <check-valid-connection-sql>SELECT 1</check-valid-connection-sql>
++                        <background-validation>true</background-validation>
++                        <background-validation-millis>60000</background-validation-millis>
++                    </validation>
++                </datasource>
+                 <datasource jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS" enabled="true" use-java-context="true">
+                     <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url>
+                     <driver>h2</driver>
+@@ -133,8 +149,8 @@
+                     <driver name="mysql" module="com.mysql">
+                         <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
+                     </driver>
+-                    <driver name="postgresql" module="org.postgresql">
+-                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
++                    <driver name="sqlserver" module="com.microsoft.sqlserver">
++                        <xa-datasource-class>com.microsoft.sqlserver.jdbc.SQLServerXADataSource</xa-datasource-class>
+                     </driver>
+                     <!-- ##DRIVERS## -->
+                 </drivers>
+@@ -589,6 +605,7 @@
+                         <property name="initializeEmpty" value="true"/>
+                         <property name="migrationStrategy" value="update"/>
+                         <property name="migrationExport" value="${jboss.home.dir}/keycloak-database-update.sql"/>
++                        <property name="schema" value="${env.DB_SCHEMA:guest}"/>
+                     </properties>
+                 </provider>
+             </spi>

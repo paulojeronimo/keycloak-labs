@@ -16,3 +16,6 @@ initial_configs=0
 # https://jdbc.postgresql.org/download.html
 postgresql_version="42.2.14"
 postgresql_jar=https://jdbc.postgresql.org/download/postgresql-$postgresql_version.jar
+
+mssql_jdbc_version="7.4.1.jre8"
+mssql_jdbc_jar=mssql-jdbc-$mssql_jdbc_version.jar

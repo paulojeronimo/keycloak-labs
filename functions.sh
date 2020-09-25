@@ -33,30 +33,40 @@ lab-check-tools() {
   for tool in $required_tools; do
     which $tool &> /dev/null || { echo "$tool is missing!"; ok=false; }
   done
-  $ok && echo "Your system is good! All the required tools are installed."
+  $ok && echo "Your system is good! All the required tools are installed." || return $?
 }
 
-lab-setup() {(
-  cd "$lab_dir"
-  [ -f docker-compose.yml ] || {
-    echo "Generating file \"$PWD/docker-compose.yml\" ..."
-    # Ref2
-    yq w docker-compose.template.yml services.kc.image $kc_image |
-    if [ $initial_configs = 0 ]; then
-      yq d - services.kc.volumes > docker-compose.yml
-    else
-      cat - > docker-compose.yml
-    fi
-  }
-  [ -d container ] || {
-    lab-kc-config-pg-driver
-    [ $initial_configs != 0 ] && lab-setup-configs $initial_configs || {
-      echo "Skipping the setup of initial configuration files ..."
+lab-set() {
+  local lab_to_set=$lab_dir/configs/$1
+  if [ -d "$lab_to_set" ]; then
+    echo "Setting lab configuration to $1"
+    sed "s/\(initial_configs=\)0/\1$1/g" config.sample > config
+    lab-restart
+  else
+    echo "Lab configuration $1 does not exists!"
+  fi
+}
+
+lab-setup() {
+  local lab_nb_dir=$lab_dir/configs/$initial_configs
+  source "$lab_nb_dir"/functions.sh
+  (
+    cd "$lab_dir"
+    [ -f docker-compose.yml ] && return || {
+      echo "Setting up docker-compose.yml from \"$lab_nb_dir/docker-compose.yml\" ..."
+      lab-setup-docker-compose
     }
-  }
-)}
+    [ -d container ] || {
+      local f=lab-setup-container; type $f &> /dev/null && $f
+      [ $initial_configs != 0 ] && lab-setup-configs $initial_configs || {
+        echo "Skipping the setup of initial configuration files ..."
+      }
+    }
+  )
+}
 
 lab-restart() {
+  for f in $(declare -F | grep lab- | cut -d' ' -f3); do unset -f $f; done
   cd "$lab_dir"
   rm docker-compose.yml
   rm -rf container
@@ -68,7 +78,7 @@ lab-setup-configs() {(
   local dir=$1
   cd "$lab_dir"
   echo "Setting up initial configurations for container from configs/$dir ..."
-  rsync -r configs/0/ container/
+  rsync --exclude={docker-compose.yml,functions.sh} -r configs/0/ container/
   local f_diff
   local f_orig
   for f in $(find configs/$dir -type f); do
@@ -83,6 +93,9 @@ lab-setup-configs() {(
       # $ diff --strip-trailing-cr -uNr $f.original $f > ${f#configuration/}.diff
     else
       mkdir -p `dirname $f_orig`
+      case ${f##*/} in
+        docker-compose.yml|functions.sh) continue;;
+      esac
       cp $f $f_orig
     fi
   done
@@ -121,33 +134,6 @@ lab-kc-bash() {
   (cd "$lab_dir"; docker-compose exec kc bash)
 }
 
-lab-kc-config-pg-driver() {(
-  local module_dir=container/modules/system/layers/base/org/postgresql/jdbc/main
-  local jar_copy=tmp/${postgresql_jar##*/}
-  cd "$lab_dir"
-  echo "Setting up PostgreSQL DataSource ..."
-  [ -f $jar_copy ] || {
-    echo "Downloading file \"${postgresql_jar##*/}\" to \"$jar_copy\" ..."
-    wget -c $postgresql_jar -O $jar_copy
-  }
-  echo "Copying \"$jar_copy\" to \"$module_dir\""
-  mkdir -p $module_dir
-  cp $jar_copy $module_dir/
-  echo "Creating file \"$module_dir/module.xml\" ..."
-  cat > $module_dir/module.xml <<EOF
-<?xml version="1.0"?>
-<module xmlns="urn:jboss:module:1.3" name="org.postgresql">
-  <resources>
-    <resource-root path="${postgresql_jar##*/}"/>
-  </resources>
-  <dependencies>
-    <module name="javax.api"/>
-    <module name="javax.transaction.api"/>
-  </dependencies>
-</module>
-EOF
-)}
-
 lab-kc-get-config() {(
   local config=/opt/eap/standalone/configuration/$wildfly_config
   cd "$lab_dir"
@@ -155,18 +141,13 @@ lab-kc-get-config() {(
   echo "File \"$PWD/tmp/$wildfly_config\" copied from \"$config\" (in kc container)!"
 )}
 
-lab-pg-bash() {(
-  cd "$lab_dir"
-  docker-compose exec pg bash
-)}
-
 lab-functions() {
-  echo "Available functions in \"$lab_dir/functions.sh\":"
+  echo "Available functions for this lab:"
   set | grep "^lab-.*()"
 }
 
 lab-load-config
 lab-mktmp
-lab-check-tools || return $?
+lab-check-tools
 lab-setup
 lab-functions

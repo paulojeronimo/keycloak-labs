@@ -1,0 +1,10 @@
+version: '3'
+services:
+  kc:
+    image: registry.access.redhat.com/redhat-sso-7/sso73-openshift
+    environment:
+      SSO_ADMIN_USERNAME: admin
+      SSO_ADMIN_PASSWORD: admin
+    ports:
+      - 8080:8080
+      - 9990:9990

@@ -1,16 +1,42 @@
 = Keycloak labs
 {localdatetime}
+:toc: macro
+:toc-title: Available labs
+:icons: font
 :experimental:
 
-A set of labs to test https://www.keycloak.org/[Keycloak^] configurations and functionalities.
+// URIs
+:uri-docker: https://www.docker.com/
+:uri-docker-compose: https://docs.docker.com/compose/
+:uri-keycloak: https://www.keycloak.org/
+:uri-rh-sso: https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/
 
-Actually, until this moment, these labs were tested only in https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/[RH-SSO 7.3^].
+// Atttibutes
+:Docker: {uri-docker}[Docker^]
+:DockerCompose: {uri-docker-compose}[Docker Compose^]
+:Keycloak: {uri-keycloak}[Keycloak^]
+:RH-SSO: {uri-rh-sso}[RH-SSO^]
 
-To follow the instructions here, you will need a Linux or macOS shell in your hands.
-Also, you will need some tools installed (read link:config.sample[] to know about).
+A set of labs to test {Keycloak}
+(or {RH-SSO}) configurations and functionalities.
+
+*[red]#Actually, until this moment, these labs were tested only with
+{RH-SSO} 7.3#*.
+
+Prerequisites::
+To follow the instructions here, you will need a Linux or macOS shell in
+your hands. +
+Also, you will need {Docker}, {DockerCompose} and some other tools
+installed: (read link:config.sample[] to know about).
 
 All `lab-*` functions used in these labs are written in Bash.
 They are available in one unique file: link:functions.sh[].
+
+WARNING: Before switching the labs (by runnint the `lab-set` function)
+stop all the containers running (and remove the volumes) in the last
+lab execution.
+
+toc::[]
 
 == Lab 0 - Start Keycloak without any modified configuration
 
@@ -22,15 +48,14 @@ $ lab-up
 Then, open http://localhost:8080.
 Open http://localhost:8080/auth/admin/[Administration Console].
 Log in with the user and password
-configured inside link:docker-compose.template.yml[].
+configured inside link:configs/0/docker-compose.yml[].
 
 To stop the server, type kbd:[Ctrl+C] in the running console.
 
 == Lab 1 - Start Keycloak using PostgreSQL to manage its database
 
 ----
-$ sed 's/\(initial_configs=\)0/\11/g' config.sample > config
-$ lab-restart
+$ lab-set 1
 $ lab-up -d
 ----
 
@@ -69,3 +94,41 @@ kcdb=# \d+
 ----
 
 Type kbd:[Ctrl+D] two (2) times to return to your shell.
+
+----
+$ lab-down -v
+----
+
+== Lab 2 - Start Keycloak using Microsoft SQL Server to manage its database
+
+----
+$ lab-set 2
+$ lab-up -d
+----
+
+....
+$ lab-sqlcmd
+1> select name from sys.sysdatabases;
+2> go
+name
+--------------------------------------------------------------------------------------------------------------------------------
+master
+tempdb
+model
+msdb
+
+(4 rows affected)
+1> select table_name from master.information_schema.tables where table_type='BASE TABLE' order by table_name;
+2> go
+table_name
+--------------------------------------------------------------------------------------------------------------------------------
+ADMIN_EVENT_ENTITY
+ASSOCIATED_POLICY
+AUTHENTICATION_EXECUTION
+AUTHENTICATION_FLOW
+AUTHENTICATOR_CONFIG
+AUTHENTICATOR_CONFIG_ENTRY
+BROKER_LINK
+CLIENT
+...
+....
