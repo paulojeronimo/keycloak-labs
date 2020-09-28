@@ -26,7 +26,7 @@ A set of labs to test {Keycloak}
 Prerequisites::
 To follow the instructions here, you will need a Linux or macOS shell in
 your hands. +
-Also, you will need {Docker}, {DockerCompose} and some other tools
+Also, you will need {DockerCompose} and some other tools
 installed: (read link:config.sample[] to know about).
 
 All `lab-*` functions used in these labs are written in Bash.
