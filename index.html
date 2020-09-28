@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<meta name="author" content="2020-09-28 12:44:02 -0300">
+<title>Keycloak labs</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>Keycloak labs</h1>
+<div class="details">
+<span id="author" class="author">2020-09-28 12:44:02 -0300</span><br>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>A set of labs to test <a href="https://www.keycloak.org/" target="_blank" rel="noopener">Keycloak</a>
+(or <a href="https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/" target="_blank" rel="noopener">RH-SSO</a>) configurations and functionalities.</p>
+</div>
+<div class="paragraph">
+<p><strong><span class="red">Actually, until this moment, these labs were tested only with
+<a href="https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/" target="_blank" rel="noopener">RH-SSO</a> 7.3</span></strong>.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Prerequisites</dt>
+<dd>
+<p>To follow the instructions here, you will need a Linux or macOS shell in
+your hands.<br>
+Also, you will need <a href="https://docs.docker.com/compose/" target="_blank" rel="noopener">Docker Compose</a> and some other tools
+installed: (read <a href="config.sample" class="bare">config.sample</a> to know about).</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>All <code>lab-*</code> functions used in these labs are written in Bash.
+They are available in one unique file: <a href="functions.sh" class="bare">functions.sh</a>.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Before switching the labs (by runnint the <code>lab-set</code> function)
+stop all the containers running (and remove the volumes) in the last
+lab execution.
+</td>
+</tr>
+</table>
+</div>
+<div id="toc" class="toc">
+<div id="toctitle" class="title">Available labs</div>
+<ul class="sectlevel1">
+<li><a href="#_lab_0_start_keycloak_without_any_modified_configuration">Lab 0 - Start Keycloak without any modified configuration</a></li>
+<li><a href="#_lab_1_start_keycloak_using_postgresql_to_manage_its_database">Lab 1 - Start Keycloak using PostgreSQL to manage its database</a></li>
+<li><a href="#_lab_2_start_keycloak_using_microsoft_sql_server_to_manage_its_database">Lab 2 - Start Keycloak using Microsoft SQL Server to manage its database</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lab_0_start_keycloak_without_any_modified_configuration">Lab 0 - Start Keycloak without any modified configuration</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre>$ source ./functions.sh
+$ lab-up</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then, open <a href="http://localhost:8080" class="bare">http://localhost:8080</a>.
+Open <a href="http://localhost:8080/auth/admin/">Administration Console</a>.
+Log in with the user and password
+configured inside <a href="configs/0/docker-compose.yml" class="bare">configs/0/docker-compose.yml</a>.</p>
+</div>
+<div class="paragraph">
+<p>To stop the server, type <span class="keyseq"><kbd>Ctrl</kbd>+<kbd>C</kbd></span> in the running console.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lab_1_start_keycloak_using_postgresql_to_manage_its_database">Lab 1 - Start Keycloak using PostgreSQL to manage its database</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre>$ lab-set 1
+$ lab-up -d</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lab-pg-bash
+root@388ddadd36d4:/# psql -U kcuser kcdb
+psql (12.3 (Debian 12.3-1.pgdg100+1))
+Type "help" for help.
+
+kcdb=# \l
+                              List of databases
+   Name    | Owner  | Encoding |  Collate   |   Ctype    | Access privileges
+-----------+--------+----------+------------+------------+-------------------
+ kcdb      | kcuser | UTF8     | en_US.utf8 | en_US.utf8 |
+ postgres  | kcuser | UTF8     | en_US.utf8 | en_US.utf8 |
+ template0 | kcuser | UTF8     | en_US.utf8 | en_US.utf8 | =c/kcuser        +
+           |        |          |            |            | kcuser=CTc/kcuser
+ template1 | kcuser | UTF8     | en_US.utf8 | en_US.utf8 | =c/kcuser        +
+           |        |          |            |            | kcuser=CTc/kcuser
+(4 rows)
+
+kcdb=# \d+
+                                 List of relations
+ Schema |             Name              | Type  | Owner  |    Size    | Description
+--------+-------------------------------+-------+--------+------------+-------------
+ public | admin_event_entity            | table | kcuser | 8192 bytes |
+ public | associated_policy             | table | kcuser | 0 bytes    |
+ public | authentication_execution      | table | kcuser | 8192 bytes |
+ public | authentication_flow           | table | kcuser | 16 kB      |
+ public | authenticator_config          | table | kcuser | 16 kB      |
+ public | authenticator_config_entry    | table | kcuser | 16 kB      |
+ public | broker_link                   | table | kcuser | 8192 bytes |
+ public | client                        | table | kcuser | 16 kB      |
+...
+...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Type <span class="keyseq"><kbd>Ctrl</kbd>+<kbd>D</kbd></span> two (2) times to return to your shell.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lab-down -v</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lab_2_start_keycloak_using_microsoft_sql_server_to_manage_its_database">Lab 2 - Start Keycloak using Microsoft SQL Server to manage its database</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre>$ lab-set 2
+$ lab-up -d</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>$ lab-sqlcmd
+1&gt; select name from sys.sysdatabases;
+2&gt; go
+name
+--------------------------------------------------------------------------------------------------------------------------------
+master
+tempdb
+model
+msdb
+
+(4 rows affected)
+1&gt; select table_name from master.information_schema.tables where table_type='BASE TABLE' order by table_name;
+2&gt; go
+table_name
+--------------------------------------------------------------------------------------------------------------------------------
+ADMIN_EVENT_ENTITY
+ASSOCIATED_POLICY
+AUTHENTICATION_EXECUTION
+AUTHENTICATION_FLOW
+AUTHENTICATOR_CONFIG
+AUTHENTICATOR_CONFIG_ENTRY
+BROKER_LINK
+CLIENT
+...</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2020-09-25 15:38:43 -0300
+</div>
+</div>
+</body>
+</html>
